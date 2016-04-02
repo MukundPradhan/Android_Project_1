@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+<item android:id="@+id/mnuCreate"
+    android:title="Create New"
+    android:icon="@drawable/add_new_task"
+    app:showAsAction="ifRoom"/>
+    <item android:id="@+id/mnuComplete"
+        android:title="Do All"
+        android:icon="@drawable/incomplete"
+        app:showAsAction="ifRoom"/>
+</menu>
