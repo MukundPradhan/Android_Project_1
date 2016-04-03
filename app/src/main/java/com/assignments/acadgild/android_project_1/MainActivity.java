@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
                         View view1 = inflater.inflate(R.layout.activity_add__todo, null);
 
                         final int dbID, dbStatus;
-                        //int finalStatus=dbStatus;
                         final EditText popUpTitle = (EditText) view1.findViewById(R.id.etTitle);
                         final EditText popUpDesc = (EditText) view1.findViewById(R.id.etDesc);
                         final EditText popUpDate = (EditText) view1.findViewById(R.id.etDate);
@@ -88,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
                                         // dbStatus=finalStatus;
                                         dbHelper.UpdateToDo(dbID, popUpTitle.getText().toString(), popUpDesc.getText().toString(),
                                                 popUpDate.getText().toString(), dbStatus);
-
 
                                         DisplayListView();
                                         popUpDialog.dismiss();
@@ -188,7 +186,6 @@ public class MainActivity extends AppCompatActivity {
                             title.requestFocus();
 
                             DisplayListView(); // update the list view after insert
-//                            Toast.makeText(getApplicationContext(), "Record Saved successfully", Toast.LENGTH_SHORT).show();
                             alertDialog.dismiss();
                         }
                     }
@@ -234,7 +231,6 @@ public class MainActivity extends AppCompatActivity {
             alertDialog.show();
 
         } else if (item.getItemId() == R.id.mnuComplete) {
-//             Here the All todo complete code to be write
             Intent intent=new Intent(MainActivity.this,Completed.class);
             startActivity(intent);
 
