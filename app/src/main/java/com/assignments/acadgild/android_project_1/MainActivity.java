@@ -1,6 +1,7 @@
 package com.assignments.acadgild.android_project_1;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +24,7 @@ import com.assignments.acadgild.android_project_1.dbhelper.DBHelper;
 import com.assignments.acadgild.android_project_1.model.ToDo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
     ListView listView;
@@ -47,33 +50,84 @@ public class MainActivity extends AppCompatActivity {
 
                         View view1 = inflater.inflate(R.layout.activity_add__todo, null);
 
-                       final TextView popUpID =(TextView) view1.findViewById(R.id.tv_ID_frmt);
+                        final int dbID, dbStatus;
+                        //int finalStatus=dbStatus;
                         final EditText popUpTitle = (EditText) view1.findViewById(R.id.etTitle);
                         final EditText popUpDesc = (EditText) view1.findViewById(R.id.etDesc);
-                        final DatePicker popUpDtpicker = (DatePicker) view1.findViewById(R.id.datePicker);
+                        final EditText popUpDate = (EditText) view1.findViewById(R.id.etDate);
+                        final DatePicker dtp = (DatePicker) view1.findViewById(R.id.datePicker);
+                        final RadioButton radioComplete = (RadioButton) view1.findViewById(R.id.radioComplete);
+                        final RadioButton radioInComplete = (RadioButton) view1.findViewById(R.id.radioInComplete);
                         final Button popUpBtnSave = (Button) view1.findViewById(R.id.btnSave);
                         final Button popUpBtnCancel = (Button) view1.findViewById(R.id.btnCancel);
 
-                       //popUpID.setText(toDoArrayList.get(Integer.parseInt(id).getId()));
-
-
-
-                        popUpID.setText(String.valueOf(toDoArrayList.get(position).getId()).toString());
+                        dbID = toDoArrayList.get(position).getId();
+                        popUpTitle.setText(toDoArrayList.get(position).getTitle());
                         popUpDesc.setText(toDoArrayList.get(position).getDescription());
-                        Toast.makeText(MainActivity.this, ""+ popUpDesc.getText().toString(), Toast.LENGTH_SHORT).show();
+                        dtp.setVisibility(View.GONE);
+                        popUpDate.setText(toDoArrayList.get(position).getDate());
+
+                        // retrive the status form dab & update to insert to db
+                        dbStatus = toDoArrayList.get(position).getStatus();
+                        if (dbStatus == 0) {
+                            radioInComplete.setChecked(true);
+                        } else {
+                            radioComplete.setChecked(true);
+                        }
 
                         popUpBtnSave.setOnClickListener(
                                 new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
+                                        int finalStatus = 0;
+                                        if (radioComplete.isChecked()) {
+                                            finalStatus = 1;
+                                        } else if (radioInComplete.isChecked()) {
+                                            finalStatus = 0;
+                                        }
+                                        // dbStatus=finalStatus;
+                                        dbHelper.UpdateToDo(dbID, popUpTitle.getText().toString(), popUpDesc.getText().toString(),
+                                                popUpDate.getText().toString(), dbStatus);
 
 
+                                        DisplayListView();
                                         popUpDialog.dismiss();
+                                        Toast.makeText(MainActivity.this, "Data Updated Succefully", Toast.LENGTH_SHORT).show();
                                     }
                                 }
                         );
-                       // popUpDialog.setView(view1);
-                      //  popUpDialog.show();
+
+                        popUpBtnCancel.setOnClickListener(
+                                new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        popUpDialog.dismiss();
+                                        Toast.makeText(MainActivity.this, "You Cancelled the Dialog", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                        );
+                        popUpDialog.setView(view1);
+                        popUpDialog.show();
+                    }
+                }
+        );
+        listView.setOnItemLongClickListener(
+                new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                        int statusValue;
+                        statusValue=toDoArrayList.get(position).getStatus();
+                        if(statusValue==1){
+                            statusValue=0;
+                        }else{
+                            statusValue=1;
+                        }
+
+                        dbHelper.UpdateStatus(toDoArrayList.get(position).getId(),statusValue);
+                        DisplayListView();
+                        Toast.makeText(MainActivity.this, "Your Entry is updated as Completed", Toast.LENGTH_SHORT).show();
+
+                        return false;
                     }
                 }
         );
@@ -99,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
 
             final EditText title = (EditText) view.findViewById(R.id.etTitle);
             final EditText desc = (EditText) view.findViewById(R.id.etDesc);
-            final RadioGroup radioGroup=(RadioGroup) view.findViewById(R.id.radioGroup);
+            final RadioGroup radioGroup = (RadioGroup) view.findViewById(R.id.radioGroup);
             final DatePicker dtpicker = (DatePicker) view.findViewById(R.id.datePicker);
             Button btnSave = (Button) view.findViewById(R.id.btnSave);
             final Button btnCancel = (Button) view.findViewById(R.id.btnCancel);
@@ -181,6 +235,9 @@ public class MainActivity extends AppCompatActivity {
 
         } else if (item.getItemId() == R.id.mnuComplete) {
 //             Here the All todo complete code to be write
+            Intent intent=new Intent(MainActivity.this,Completed.class);
+            startActivity(intent);
+
         }
 
         return super.onOptionsItemSelected(item);

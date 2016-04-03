@@ -26,6 +26,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     SQLiteDatabase db;
 
+
     public DBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
 
@@ -65,7 +66,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        db.execSQL(("DROP TABLE IF EXISTS " + TABLE_NAME));
+        onCreate(db);
     }
 
     public ArrayList<ToDo> getAllToDoList() {
@@ -94,5 +96,67 @@ public class DBHelper extends SQLiteOpenHelper {
         return toDoArrayList;
 
     }
+
+    public void UpdateToDo(int id, String title, String desc, String date, int status) {
+        db = getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(KEY_TITLE,title);
+        contentValues.put(KEY_DESCRIPTION, desc);
+        contentValues.put(KEY_DATE, date);
+        contentValues.put(KEY_STATUS, status);
+
+        try {
+            db.update(TABLE_NAME, contentValues, KEY_ID + "=?", new String[]{String.valueOf(id)});
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.close();
+        }
+    }
+
+    public void UpdateStatus(int id, int status) {
+
+        db = getWritableDatabase();
+        ContentValues contentValues=new ContentValues();
+        contentValues.put(KEY_STATUS,status);
+
+        try {
+            db.update(TABLE_NAME, contentValues , KEY_ID + "=?", new String[]{String.valueOf(id)});
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.close();
+        }
+    }
+    public ArrayList<ToDo> getAllCompleteToDo() {
+        db = getReadableDatabase();
+
+        ArrayList<ToDo> toDoArrayList = new ArrayList<>();
+        String select_all = "SELECT * FROM " + TABLE_NAME + "  WHERE " + KEY_STATUS + " = 1;";
+
+        Cursor cursor = db.rawQuery(select_all, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(0);
+                String title = cursor.getString(1);
+                String desc = cursor.getString(2);
+                String date = cursor.getString(3);
+                int status = cursor.getInt(4);
+
+                ToDo toDo = new ToDo(id, title, desc, date, status);
+
+                toDoArrayList.add(toDo);
+
+            } while ((cursor.moveToNext()));
+        }
+
+        return toDoArrayList;
+
+    }
+
+
+
 }
 
