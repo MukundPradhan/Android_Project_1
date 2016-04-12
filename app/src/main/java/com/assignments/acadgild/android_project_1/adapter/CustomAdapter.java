@@ -71,6 +71,7 @@ public class CustomAdapter extends BaseAdapter {
         txtdate.setText(toDo.getDate());
         headerDate.setText(toDo.getDate());
         txtHeaderDate.setVisibility(View.VISIBLE);
+        txtID.setVisibility(View.GONE);
 
         if (toDo.getStatus().equals(0)) {
             imageView.setImageResource(R.drawable.incomplete);

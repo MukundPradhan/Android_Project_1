@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,7 +17,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.assignments.acadgild.android_project_1.adapter.CustomAdapter;
@@ -24,111 +24,54 @@ import com.assignments.acadgild.android_project_1.dbhelper.DBHelper;
 import com.assignments.acadgild.android_project_1.model.ToDo;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener,
+        AdapterView.OnItemLongClickListener, View.OnClickListener, View.OnFocusChangeListener {
+
+
     ListView listView;
     CustomAdapter customAdapter;
     DBHelper dbHelper;
     ArrayList<ToDo> toDoArrayList;
     LayoutInflater inflater;
 
+
+    AlertDialog.Builder alertDialogBuilder, popUpDialogBuilder;
+    AlertDialog alertDialog, popUpDialog;
+    View alertDialogView, popUpDialogView;
+
+    //Variable Declaration for Alert Dialog Box (ADD) & popUp
+    EditText aTitle, pTitle;
+    EditText aDesc, pDesc;
+    EditText pDate;
+    RadioGroup radioGroup, pRadioGroup;
+    RadioButton aRadioComplete, pRadioComplete;
+    RadioButton aRadioInComplete, pRadioInComplete;
+    DatePicker datePicker;
+    Button aBtnSave, pBtnUpdate;
+    Button aBtnCancel, pBtnCancel;
+    int pID, pStatus = 0;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        DisplayListView(); // update the list view items from table.
+        dbHelper = new DBHelper(getApplicationContext());
 
-        listView.setOnItemClickListener(
-                new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        final AlertDialog.Builder popUpDialogBuilder = new AlertDialog.Builder(MainActivity.this);
-                        final AlertDialog popUpDialog = popUpDialogBuilder.create();
-                        inflater = LayoutInflater.from(MainActivity.this);
+        listView = (ListView) findViewById(R.id.listViewToDo);
 
-                        View view1 = inflater.inflate(R.layout.activity_add__todo, null);
+        UpdateListView();
 
-                        final int dbID, dbStatus;
-                        final EditText popUpTitle = (EditText) view1.findViewById(R.id.etTitle);
-                        final EditText popUpDesc = (EditText) view1.findViewById(R.id.etDesc);
-                        final EditText popUpDate = (EditText) view1.findViewById(R.id.etDate);
-                        final DatePicker dtp = (DatePicker) view1.findViewById(R.id.datePicker);
-                        final RadioButton radioComplete = (RadioButton) view1.findViewById(R.id.radioComplete);
-                        final RadioButton radioInComplete = (RadioButton) view1.findViewById(R.id.radioInComplete);
-                        final Button popUpBtnSave = (Button) view1.findViewById(R.id.btnSave);
-                        final Button popUpBtnCancel = (Button) view1.findViewById(R.id.btnCancel);
+        listView.setOnItemClickListener(this);
+        listView.setOnItemLongClickListener(this);
+    }
 
-                        dbID = toDoArrayList.get(position).getId();
-                        popUpTitle.setText(toDoArrayList.get(position).getTitle());
-                        popUpDesc.setText(toDoArrayList.get(position).getDescription());
-                        dtp.setVisibility(View.GONE);
-                        popUpDate.setText(toDoArrayList.get(position).getDate());
-
-                        // retrive the status form dab & update to insert to db
-                        dbStatus = toDoArrayList.get(position).getStatus();
-                        if (dbStatus == 0) {
-                            radioInComplete.setChecked(true);
-                        } else {
-                            radioComplete.setChecked(true);
-                        }
-
-                        popUpBtnSave.setOnClickListener(
-                                new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        int finalStatus = 0;
-                                        if (radioComplete.isChecked()) {
-                                            finalStatus = 1;
-                                        } else if (radioInComplete.isChecked()) {
-                                            finalStatus = 0;
-                                        }
-                                        // dbStatus=finalStatus;
-                                        dbHelper.UpdateToDo(dbID, popUpTitle.getText().toString(), popUpDesc.getText().toString(),
-                                                popUpDate.getText().toString(), dbStatus);
-
-                                        DisplayListView();
-                                        popUpDialog.dismiss();
-                                        Toast.makeText(MainActivity.this, "Data Updated Succefully", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                        );
-
-                        popUpBtnCancel.setOnClickListener(
-                                new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        popUpDialog.dismiss();
-                                        Toast.makeText(MainActivity.this, "You Cancelled the Dialog", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                        );
-                        popUpDialog.setView(view1);
-                        popUpDialog.show();
-                    }
-                }
-        );
-        listView.setOnItemLongClickListener(
-                new AdapterView.OnItemLongClickListener() {
-                    @Override
-                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        int statusValue;
-                        statusValue=toDoArrayList.get(position).getStatus();
-                        if(statusValue==1){
-                            statusValue=0;
-                        }else{
-                            statusValue=1;
-                        }
-
-                        dbHelper.UpdateStatus(toDoArrayList.get(position).getId(),statusValue);
-                        DisplayListView();
-                        Toast.makeText(MainActivity.this, "Your Entry is updated as Completed", Toast.LENGTH_SHORT).show();
-
-                        return false;
-                    }
-                }
-        );
+    public void UpdateListView() {
+        toDoArrayList = dbHelper.getAllToDoList();
+        customAdapter = new CustomAdapter(getApplicationContext(), toDoArrayList);
+        listView.setAdapter(customAdapter);
     }
 
 
@@ -141,97 +84,35 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         if (item.getItemId() == R.id.mnuCreate) {
-            // This code is running when we clicked the + Action Button from ActionBar
-            final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-            final AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialogBuilder = new AlertDialog.Builder(this);
+            alertDialog = alertDialogBuilder.create();
             inflater = LayoutInflater.from(this);
+            alertDialogView = inflater.inflate(R.layout.activity_add__todo, null);
 
-            View view = inflater.inflate(R.layout.activity_add__todo, null);
-
-            final EditText title = (EditText) view.findViewById(R.id.etTitle);
-            final EditText desc = (EditText) view.findViewById(R.id.etDesc);
-            final RadioGroup radioGroup = (RadioGroup) view.findViewById(R.id.radioGroup);
-            final DatePicker dtpicker = (DatePicker) view.findViewById(R.id.datePicker);
-            Button btnSave = (Button) view.findViewById(R.id.btnSave);
-            final Button btnCancel = (Button) view.findViewById(R.id.btnCancel);
+            aTitle = (EditText) alertDialogView.findViewById(R.id.etTitle);
+            aDesc = (EditText) alertDialogView.findViewById(R.id.etDesc);
+            radioGroup = (RadioGroup) alertDialogView.findViewById(R.id.radioGroup);
+            aRadioComplete = (RadioButton) alertDialogView.findViewById(R.id.radioComplete);
+            aRadioInComplete = (RadioButton) alertDialogView.findViewById(R.id.radioInComplete);
+            datePicker = (DatePicker) alertDialogView.findViewById(R.id.datePicker);
+            aBtnSave = (Button) alertDialogView.findViewById(R.id.btnSave);
+            aBtnCancel = (Button) alertDialogView.findViewById(R.id.btnCancel);
 
             radioGroup.setVisibility(View.GONE);
+            aBtnSave.setOnClickListener(this);
+            aBtnCancel.setOnClickListener(this);
 
-            btnSave.setOnClickListener(
-                    new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            String selectDate, mDay, mMonth, mYear;
+            aTitle.setOnFocusChangeListener(this);
+            aDesc.setOnFocusChangeListener(this);
 
-                            if (dtpicker.getDayOfMonth() <= 9) {
-                                mDay = "0" + String.valueOf(dtpicker.getDayOfMonth());
-                            } else {
-                                mDay = String.valueOf(dtpicker.getDayOfMonth());
-                            }
-
-                            if (dtpicker.getMonth() < 9) {
-                                mMonth = "0" + String.valueOf(dtpicker.getMonth() + 1);
-                            } else {
-                                mMonth = "" + String.valueOf(dtpicker.getMonth() + 1);
-                            }
-                            mYear = "" + dtpicker.getYear();
-
-                            selectDate = mDay + "/" + mMonth + "/" + mYear;
-                            Toast.makeText(MainActivity.this, "" + selectDate, Toast.LENGTH_SHORT).show();
-
-                            dbHelper.insertToDo(title.getText().toString(), desc.getText().toString(), selectDate, 0);
-                            title.setText("");
-                            desc.setText("");
-                            title.requestFocus();
-
-                            DisplayListView(); // update the list view after insert
-                            alertDialog.dismiss();
-                        }
-                    }
-            );
-            btnCancel.setOnClickListener(
-                    new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            alertDialog.dismiss();
-                            Toast.makeText(MainActivity.this, "Cancel", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-            );
-
-
-            title.setOnFocusChangeListener(
-                    new View.OnFocusChangeListener() {
-                        @Override
-                        public void onFocusChange(View v, boolean hasFocus) {
-                            if (hasFocus) {
-                                if (title.getText().toString().trim().length() < 1) {
-                                    title.setError("Minimum 1 Char");
-                                }
-                            }
-                        }
-                    }
-            );
-
-            desc.setOnFocusChangeListener(
-                    new View.OnFocusChangeListener() {
-                        @Override
-                        public void onFocusChange(View v, boolean hasFocus) {
-                            if (hasFocus) {
-                                if (desc.getText().toString().trim().length() < 1) {
-                                    desc.setError("Minimun 1 Char");
-                                }
-                            }
-                        }
-                    }
-            );
-
-            alertDialog.setView(view);
+            alertDialog.setView(alertDialogView);
             alertDialog.show();
 
+            //     Toast.makeText(MainActivity.this, "flag : " + flag, Toast.LENGTH_SHORT).show();
         } else if (item.getItemId() == R.id.mnuComplete) {
-            Intent intent=new Intent(MainActivity.this,Completed.class);
+            Intent intent = new Intent(MainActivity.this, Completed.class);
             startActivity(intent);
 
         }
@@ -239,17 +120,151 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void DisplayListView() {
-        dbHelper = new DBHelper(getApplicationContext());
 
-        listView = (ListView) findViewById(R.id.listViewToDo);
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        toDoArrayList = dbHelper.getAllToDoList();
+        popUpDialogBuilder = new AlertDialog.Builder(this);
+        popUpDialog = popUpDialogBuilder.create();
+        inflater = LayoutInflater.from(this);
+        popUpDialogView = inflater.inflate(R.layout.activity_update_todo, null);
 
-        customAdapter = new CustomAdapter(getApplicationContext(), toDoArrayList);
 
-        listView.setAdapter(customAdapter);
+        pTitle = (EditText) popUpDialogView.findViewById(R.id.etTitle1);
+        pDesc = (EditText) popUpDialogView.findViewById(R.id.etDesc1);
+        pDate = (EditText) popUpDialogView.findViewById(R.id.etDate1);
+        pRadioGroup = (RadioGroup) popUpDialogView.findViewById(R.id.radioGroup1);
+        pRadioComplete = (RadioButton) popUpDialogView.findViewById(R.id.radioComplete1);
+        pRadioInComplete = (RadioButton) view.findViewById(R.id.radioInComplete1);
+        pBtnUpdate = (Button) popUpDialogView.findViewById(R.id.btnUpdate);
+        pBtnCancel = (Button) popUpDialogView.findViewById(R.id.btnCancel1);
+
+        pID = toDoArrayList.get(position).getId();
+        pTitle.setText(toDoArrayList.get(position).getTitle());
+        pDesc.setText(toDoArrayList.get(position).getDescription());
+        pDate.setText(toDoArrayList.get(position).getDate());
+        pStatus = toDoArrayList.get(position).getStatus();
+
+        // retrieve the status form dab & update to insert to db
+        if (pStatus == 0) {
+            pRadioGroup.check(R.id.radioInComplete1);
+        } else if (pStatus == 1) {
+            pRadioGroup.check(R.id.radioComplete1);
+        }
+
+        pBtnUpdate.setOnClickListener(this);
+        pBtnCancel.setOnClickListener(this);
+
+        popUpDialog.setView(popUpDialogView);
+        popUpDialog.show();
+
     }
 
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        String task;
+        int statusValue;
+        statusValue = toDoArrayList.get(position).getStatus();
+        if (statusValue == 1) {
+            statusValue = 0;
+            task = "Uncompleted";
+        } else {
+            statusValue = 1;
+            task = "Completed";
+        }
 
+        dbHelper.UpdateStatus(toDoArrayList.get(position).getId(), statusValue);
+        UpdateListView();
+        Toast.makeText(MainActivity.this, "Your to-do task is updated as : " + task, Toast.LENGTH_SHORT).show();
+
+        return false;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+
+            case R.id.btnSave:   // Save Button of Alert Dialog Box
+
+                String selectDate, mDay, mMonth, mYear;
+
+                if (datePicker.getDayOfMonth() <= 9) {
+                    mDay = "0" + String.valueOf(datePicker.getDayOfMonth());
+                } else {
+                    mDay = String.valueOf(datePicker.getDayOfMonth());
+                }
+
+                if (datePicker.getMonth() < 9) {
+                    mMonth = "0" + String.valueOf(datePicker.getMonth() + 1);
+                } else {
+                    mMonth = "" + String.valueOf(datePicker.getMonth() + 1);
+                }
+                mYear = "" + datePicker.getYear();
+
+                selectDate = mDay + "/" + mMonth + "/" + mYear;
+
+                dbHelper.insertToDo(aTitle.getText().toString(), aDesc.getText().toString(), selectDate, 0);
+                aTitle.setText("");
+                aDesc.setText("");
+                aTitle.requestFocus();
+
+                alertDialog.dismiss();
+                UpdateListView();
+                break;
+
+            case R.id.btnUpdate:
+
+
+                if (pRadioGroup.getCheckedRadioButtonId() == R.id.radioComplete1) {
+                    pStatus = 1;
+                } else if (pRadioGroup.getCheckedRadioButtonId() == R.id.radioInComplete1) {
+                    pStatus = 0;
+                }
+
+                dbHelper.UpdateToDo(pID, pTitle.getText().toString(), pDesc.getText().toString(),
+                        pDate.getText().toString(), pStatus);
+
+                Toast.makeText(this, "Data Updated Succefully", Toast.LENGTH_SHORT).show();
+                UpdateListView();
+                popUpDialog.dismiss();
+
+                break;
+
+            case R.id.btnCancel:   // cancel Button of Dialog Box
+
+                alertDialog.dismiss();
+                Toast.makeText(MainActivity.this, "You Cancel the Dialog Box ", Toast.LENGTH_SHORT).show();
+                break;
+
+            case R.id.btnCancel1:   // cancel Button of Dialog Box
+
+                popUpDialog.dismiss();
+                Toast.makeText(MainActivity.this, "You Cancel the Dialog Box ", Toast.LENGTH_SHORT).show();
+                break;
+        }
+
+
+    }
+
+    @Override
+    public void onFocusChange(View view, boolean hasFocus) {
+        if (view.getId() == R.id.etTitle) {
+            if (hasFocus) {
+                if (aTitle.getText().toString().trim().length() < 1) {
+                    aTitle.setError("Minimum 1 Char");
+                }
+            }
+        } else if (view.getId() == R.id.etDesc) {
+            if (hasFocus) {
+                if (aDesc.getText().toString().trim().length() < 1) {
+                    aDesc.setError("Minimun 1 Char");
+                }
+            }
+        }
+    }
 }
+
+
+
+
+

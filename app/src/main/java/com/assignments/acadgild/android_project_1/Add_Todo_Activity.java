@@ -15,7 +15,7 @@ import java.util.Calendar;
 public class Add_Todo_Activity extends AppCompatActivity {
    /* EditText txtTitle, txtDesc;
     DatePicker datePicker;
-    Button btnSave, btnCancel;
+    Button aBtnSave, aBtnCancel;
     DBHelper dbHelper;*/
 
     @Override

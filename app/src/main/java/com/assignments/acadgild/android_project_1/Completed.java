@@ -23,13 +23,10 @@ public class Completed extends AppCompatActivity {
         setContentView(R.layout.activity_completed);
 
         completedListView = (ListView) findViewById(R.id.completedListView);
-        dbHelper=new DBHelper(this);
-        toDoArrayList=dbHelper.getAllCompleteToDo();
-        adapter=new CustomAdapter(this,toDoArrayList);
+        dbHelper = new DBHelper(this);
+        toDoArrayList = dbHelper.getAllCompleteToDo();
+        adapter = new CustomAdapter(this, toDoArrayList);
 
         completedListView.setAdapter(adapter);
-
-
-
     }
 }

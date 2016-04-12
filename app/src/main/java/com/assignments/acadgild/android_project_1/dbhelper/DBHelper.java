@@ -101,7 +101,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db = getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
-        contentValues.put(KEY_TITLE,title);
+        contentValues.put(KEY_TITLE, title);
         contentValues.put(KEY_DESCRIPTION, desc);
         contentValues.put(KEY_DATE, date);
         contentValues.put(KEY_STATUS, status);
@@ -118,22 +118,23 @@ public class DBHelper extends SQLiteOpenHelper {
     public void UpdateStatus(int id, int status) {
 
         db = getWritableDatabase();
-        ContentValues contentValues=new ContentValues();
-        contentValues.put(KEY_STATUS,status);
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(KEY_STATUS, status);
 
         try {
-            db.update(TABLE_NAME, contentValues , KEY_ID + "=?", new String[]{String.valueOf(id)});
+            db.update(TABLE_NAME, contentValues, KEY_ID + "=?", new String[]{String.valueOf(id)});
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             db.close();
         }
     }
+
     public ArrayList<ToDo> getAllCompleteToDo() {
         db = getReadableDatabase();
 
         ArrayList<ToDo> toDoArrayList = new ArrayList<>();
-        String select_all = "SELECT * FROM " + TABLE_NAME + "  WHERE " + KEY_STATUS + " = 1;";
+        String select_all = "SELECT * FROM " + TABLE_NAME + "  WHERE " + KEY_STATUS + " = 1" + "  ORDER BY " + KEY_DATE + " ASC;";
 
         Cursor cursor = db.rawQuery(select_all, null);
 
@@ -155,7 +156,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return toDoArrayList;
 
     }
-
 
 
 }
